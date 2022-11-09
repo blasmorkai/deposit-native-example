@@ -119,6 +119,16 @@ pub mod execute {
     ) -> Result<Response, ContractError> {
         let sender = info.sender.clone().into_string();
 
+        // QUESTION: Shouldn't we check that the owner is the one withdrawing?
+        // CODE ADDED
+        let config = CONFIG.load(deps.storage)?;
+        // Only the sender can withdraw funds
+        if config.owner != info.sender {
+            return Err(ContractError::InvalidOwner {});
+        }
+
+
+
         // Here we are loading the Deposits the sender has for a certain kind of funds.
         // QUESTION: What happens if there are not that kind of funds?.  may_load could have been used on the map to check.
         let mut deposit = DEPOSITS
@@ -139,7 +149,6 @@ pub mod execute {
             .unwrap();
 
         // As we have reduced the amount of funds from our records we send the funds back to the sender.
-        // QUESTION: Shouldn't we check that the owner is the one withdrawing?
         let msg = BankMsg::Send {
             to_address: sender.clone(),
             amount: vec![coin(amount, denom.clone())],
