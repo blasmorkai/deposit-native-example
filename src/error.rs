@@ -14,4 +14,7 @@ pub enum ContractError {
 
     #[error("Invalid Coin")]
     InvalidCoin {},
+
+    #[error("Only one Coin can be sent")]
+    OnlyOneCoin {},
 }

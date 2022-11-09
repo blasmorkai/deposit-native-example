@@ -20,6 +20,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     Deposits { address: String },
+    GetConfig {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -31,3 +32,8 @@ pub struct DepositResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MigrateMsg {}
+
+
+// InstantiateMsg - enum
+// ExecuteMsg/QueryMsg - enum of structs.
+// DepositRespose - struct of a tuple (String, Deposits Struct) vector
