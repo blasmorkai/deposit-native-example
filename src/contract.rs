@@ -128,37 +128,71 @@ pub mod execute {
         }
 
 
+        match DEPOSITS.load(deps.storage, (&sender, denom.as_str())) {
+            Ok(mut deposit) => {
+                deposit.coins.amount = deposit
+                .coins
+                .amount
+                .checked_sub(Uint128::from(amount))
+                .unwrap();
+                
+                deposit.count = deposit.count.checked_sub(1).unwrap();
+                
+                DEPOSITS
+                .save(deps.storage, (&sender, denom.as_str()), &deposit)
+                .unwrap();
 
-        // Here we are loading the Deposits the sender has for a certain kind of funds.
-        // QUESTION: What happens if there are not that kind of funds?.  may_load could have been used on the map to check.
-        let mut deposit = DEPOSITS
-            .load(deps.storage, (&sender, denom.as_str()))
-            .unwrap();
+                let msg = BankMsg::Send {
+                    to_address: sender.clone(),
+                    amount: vec![coin(amount, denom.clone())],
+                };  
+                
+                Ok(Response::new()
+                .add_attribute("execute", "withdraw")
+                .add_attribute("denom", denom)
+                .add_attribute("amount", amount.to_string())
+                .add_message(msg))
 
-        // The amount and count is reduced, using checked_sub() to subtract efficiently.
-        deposit.coins.amount = deposit
-            .coins
-            .amount
-            .checked_sub(Uint128::from(amount))
-            .unwrap();
+            }
+            Err(_) => {
 
-        deposit.count = deposit.count.checked_sub(1).unwrap();
+                Err(ContractError::CustomError { val: "No funds for the withdrawn coin".to_string() })
 
-        DEPOSITS
-            .save(deps.storage, (&sender, denom.as_str()), &deposit)
-            .unwrap();
+            }
+        }
 
-        // As we have reduced the amount of funds from our records we send the funds back to the sender.
-        let msg = BankMsg::Send {
-            to_address: sender.clone(),
-            amount: vec![coin(amount, denom.clone())],
-        };
 
-        Ok(Response::new()
-            .add_attribute("execute", "withdraw")
-            .add_attribute("denom", denom)
-            .add_attribute("amount", amount.to_string())
-            .add_message(msg))
+
+        // // Here we are loading the Deposits the sender has for a certain kind of funds.
+        // // QUESTION: What happens if there are not that kind of funds?.  may_load could have been used on the map to check.
+        // let mut deposit = DEPOSITS
+        //     .load(deps.storage, (&sender, denom.as_str()))
+        //     .unwrap();
+
+        // // The amount and count is reduced, using checked_sub() to subtract efficiently.
+        // deposit.coins.amount = deposit
+        //     .coins
+        //     .amount
+        //     .checked_sub(Uint128::from(amount))
+        //     .unwrap();
+
+        // deposit.count = deposit.count.checked_sub(1).unwrap();
+
+        // DEPOSITS
+        //     .save(deps.storage, (&sender, denom.as_str()), &deposit)
+        //     .unwrap();
+
+        // // As we have reduced the amount of funds from our records we send the funds back to the sender.
+        // let msg = BankMsg::Send {
+        //     to_address: sender.clone(),
+        //     amount: vec![coin(amount, denom.clone())],
+        // };
+
+        // Ok(Response::new()
+        //     .add_attribute("execute", "withdraw")
+        //     .add_attribute("denom", denom)
+        //     .add_attribute("amount", amount.to_string())
+        //     .add_message(msg))
     }
 
     pub fn update_config(
